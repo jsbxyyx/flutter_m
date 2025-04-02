@@ -16,6 +16,17 @@ class _HomePageState extends State<HomePage>
   var _hint = "金瓶梅";
   var _keyword = "";
 
+  var _hasNext = false;
+  var _page = 1;
+
+  late ScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController()..addListener(_loadMore);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,97 +52,121 @@ class _HomePageState extends State<HomePage>
                 icon: Icon(Icons.search),
                 onPressed: () {
                   FocusScope.of(context).requestFocus(FocusNode());
+                  _page = 1;
                   _search = true;
                   if (_keyword.trim() == "") {
                     _keyword = _hint;
                   }
-                  api.search(_keyword, 1, [], []).then((response) {
-                    var status = response['status'];
-                    if (status != 200) {
-                      var message = response['headers']['X-message'];
-                      setState(() {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.red,
-                            content: Text(message ?? "未搜索到结果 $status"),
-                          ),
-                        );
-                      });
-                      return;
-                    }
-                    setState(() {
-                      if (_search) {
-                        _list.clear();
-                        _search = false;
-                      }
-                      _list.addAll(response["data"]["list"]);
-                    });
-                  });
+                  _refresh();
                 },
               ),
             ),
           ],
         ),
       ),
-      body: Center(
-        child: ListView.builder(
-          itemCount: _list.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                print("index: $index");
-                var item = _list[index];
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailPage(arg: item),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _list.length,
+              controller: _controller,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    print("index: $index");
+                    var item = _list[index];
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DetailPage(arg: item),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: EdgeInsets.all(5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Image.network(
+                          _list[index]["coverImage"]!,
+                          width: 100,
+                          height: 100,
+                          errorBuilder: (
+                            BuildContext context,
+                            Object exception,
+                            StackTrace? trace,
+                          ) {
+                            return Image.asset(
+                              "assets/p404.png",
+                              width: 100,
+                              height: 100,
+                            );
+                          },
+                        ),
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.only(left: 5),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(_list[index]["title"]!),
+                                Text(_list[index]["publisher"]!),
+                                Text(_list[index]["file"]!),
+                                Text(_list[index]["year"]!),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
-              child: Container(
-                margin: EdgeInsets.all(5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Image.network(
-                      _list[index]["coverImage"]!,
-                      width: 100,
-                      height: 100,
-                      errorBuilder: (
-                        BuildContext context,
-                        Object exception,
-                        StackTrace? trace,
-                      ) {
-                        return Image.asset(
-                          "assets/p404.png",
-                          width: 100,
-                          height: 100,
-                        );
-                      },
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsets.only(left: 5),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(_list[index]["title"]!),
-                            Text(_list[index]["publisher"]!),
-                            Text(_list[index]["file"]!),
-                            Text(_list[index]["year"]!),
-                          ],
-                        ),
-                      )
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  void _loadMore() {
+    if (_hasNext && _controller.position.extentAfter < 300) {
+      print("load more...");
+      _page += 1;
+      _refresh();
+    }
+  }
+
+  void _refresh() {
+    api.search(_keyword, _page, [], []).then((response) {
+      var status = response['status'];
+      if (status != 200) {
+        var message = response['headers']['X-message'];
+        setState(() {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: Colors.red,
+              content: Text(message ?? "未搜索到结果 $status"),
+            ),
+          );
+        });
+        return;
+      }
+      setState(() {
+        if (_search) {
+          _list.clear();
+          _search = false;
+        }
+        List<dynamic> list = response["data"]["list"];
+        if (list.isNotEmpty) {
+          _list.addAll(list);
+          _hasNext = true;
+        } else {
+          _hasNext = false;
+        }
+      });
+    });
   }
 
   @override
