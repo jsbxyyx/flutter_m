@@ -1,11 +1,161 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import './api.dart' as api;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<StatefulWidget> createState() => _HomePageState();
+  State<StatefulWidget> createState() => _GamepadState2();
+}
+
+class _GamepadState2 extends State<HomePage> {
+
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[900],
+      body: Center(
+        child: Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.grey[800],
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha((255.0 * 0.5).round()),
+                spreadRadius: 5,
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              )
+            ]
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDirectionButton("上", "UP"),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildDirectionButton('左', "LEFT"),
+                      SizedBox(width: 48),
+                      _buildDirectionButton('右', "RIGHT"),
+                    ],
+                  ),
+                  _buildDirectionButton("下", "DOWN"),
+                ],
+              ),
+              SizedBox(width: MediaQuery.of(context).size.width * 0.5),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildRoundButton(Colors.green, "B"),
+                  SizedBox(width: 30, height: 24),
+                  _buildRoundButton(Colors.red, "A"),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoundButton(Color color, String action) {
+    return Container(
+        margin: const EdgeInsets.all(4),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            minimumSize: const Size(56, 56),
+            shape: const CircleBorder(),
+            elevation: 4,
+            padding: EdgeInsets.zero,
+          ),
+          onPressed: () {
+            _handleAction(action);
+          },
+          child: Container(
+            width: 56,
+            height: 56,
+            alignment: Alignment.center,
+            child: Text(
+              color == Colors.red ? 'A' : 'B',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      );
+  }
+
+  Widget _buildDirectionButton(String label, String action) {
+    return Container(
+        margin: const EdgeInsets.all(4),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey[300],
+            minimumSize: const Size(48, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            elevation: 4,
+            padding: EdgeInsets.zero,
+          ),
+          onPressed: () {
+            _handleAction(action);
+          },
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey[800],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+  }
+
+  void _handleAction(String action) {
+    print("press $action");
+    if (action == "UP") {
+
+    } else if (action == "DOWN") {
+
+    } else if (action == "LEFT") {
+
+    } else if (action == "RIGHT") {
+
+    } else if (action == "A") {
+
+    } else if (action == "B") {
+
+    }
+  }
+
 }
 
 class _HomePageState extends State<HomePage>
@@ -25,7 +175,8 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController()..addListener(_loadMore);
+    _controller = ScrollController()
+      ..addListener(_loadMore);
   }
 
   @override
@@ -37,7 +188,10 @@ class _HomePageState extends State<HomePage>
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
-              width: MediaQuery.of(context).size.width * 0.8,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width * 0.8,
               child: TextFormField(
                 decoration: InputDecoration(hintText: _hint),
                 onChanged: (str) {
@@ -48,7 +202,10 @@ class _HomePageState extends State<HomePage>
               ),
             ),
             SizedBox(
-              width: MediaQuery.of(context).size.width * 0.1,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width * 0.1,
               child: IconButton(
                 icon: Icon(Icons.search),
                 onPressed: () {
@@ -92,11 +249,9 @@ class _HomePageState extends State<HomePage>
                           _list[index]["coverImage"]!,
                           width: 100,
                           height: 100,
-                          errorBuilder: (
-                            BuildContext context,
-                            Object exception,
-                            StackTrace? trace,
-                          ) {
+                          errorBuilder: (BuildContext context,
+                              Object exception,
+                              StackTrace? trace,) {
                             return Image.asset(
                               "assets/p404.png",
                               width: 100,
@@ -258,11 +413,9 @@ class _DetailPageState extends State<DetailPage> {
                   data['coverImage'] ?? "",
                   width: 300,
                   height: 400,
-                  errorBuilder: (
-                    BuildContext context,
-                    Object exception,
-                    StackTrace? trace,
-                  ) {
+                  errorBuilder: (BuildContext context,
+                      Object exception,
+                      StackTrace? trace,) {
                     return Text("图片");
                   },
                 ),
@@ -275,7 +428,10 @@ class _DetailPageState extends State<DetailPage> {
               TextButton(
                 style: ButtonStyle(
                   fixedSize: WidgetStateProperty.all(
-                    Size(MediaQuery.of(context).size.width * 0.5, 10),
+                    Size(MediaQuery
+                        .of(context)
+                        .size
+                        .width * 0.5, 10),
                   ),
                   backgroundColor: WidgetStateProperty.all(Colors.purple),
                 ),
