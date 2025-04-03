@@ -73,16 +73,16 @@ class _GamepadState2 extends State<HomePage>
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildDirectionButton("上", "UP"),
+                        _buildDirectionButton("↑", "UP"),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildDirectionButton('左', "LEFT"),
+                            _buildDirectionButton('←', "LEFT"),
                             SizedBox(width: 48),
-                            _buildDirectionButton('右', "RIGHT"),
+                            _buildDirectionButton('→', "RIGHT"),
                           ],
                         ),
-                        _buildDirectionButton("下", "DOWN"),
+                        _buildDirectionButton("↓", "DOWN"),
                       ],
                     ),
                     SizedBox(
