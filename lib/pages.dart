@@ -109,7 +109,7 @@ class _GamepadState2 extends State<HomePage>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text("服务器", style: TextStyle(color: Colors.white)),
+                    Text("MQTT服务器", style: TextStyle(color: Colors.white)),
                     SizedBox(width: 5),
                     SizedBox(
                       width: 200,
