@@ -17,6 +17,7 @@ class _HomePageState extends State<HomePage>
   var _keyword = "";
 
   var _hasNext = false;
+  var _hasLoading = false;
   var _page = 1;
 
   late ScrollController _controller;
@@ -131,7 +132,7 @@ class _HomePageState extends State<HomePage>
   }
 
   void _loadMore() {
-    if (_hasNext && _controller.position.extentAfter < 300) {
+    if (_hasNext && !_hasLoading && _controller.position.extentAfter < 50) {
       print("load more...");
       _page += 1;
       _refresh();
@@ -139,7 +140,9 @@ class _HomePageState extends State<HomePage>
   }
 
   void _refresh() {
+    _hasLoading = true;
     api.search(_keyword, _page, [], []).then((response) {
+      _hasLoading = false;
       var status = response['status'];
       if (status != 200) {
         var message = response['headers']['X-message'];
@@ -246,7 +249,7 @@ class _DetailPageState extends State<DetailPage> {
                 data['title'] ?? "",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 24.0,
+                  fontSize: 18.0,
                   height: 1.0,
                 ),
               ),
