@@ -142,16 +142,14 @@ class _HomePageState extends State<HomePage>
 
   void _refresh() {
     _hasLoading = true;
-    api.search(_keyword, _page, [], []).then((response) {
+    api.search(_keyword, _page, [], []).then((Tuple tuple) {
       _hasLoading = false;
-      var status = response['status'];
-      if (status != 200) {
-        var message = response['headers']['X-message'];
+      if (tuple.a != 0) {
         setState(() {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: Colors.red,
-              content: Text(message ?? "未搜索到结果 $status"),
+              content: Text(tuple.b ?? "未搜索到结果"),
             ),
           );
         });
@@ -162,7 +160,7 @@ class _HomePageState extends State<HomePage>
           _list.clear();
           _search = false;
         }
-        List<dynamic> list = response["data"]["list"];
+        List<dynamic> list = tuple.c;
         if (list.isNotEmpty) {
           _list.addAll(list);
           _hasNext = true;
