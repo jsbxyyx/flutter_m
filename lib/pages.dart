@@ -1,258 +1,12 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:mqtt_client/mqtt_client.dart';
-import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:flutter_m/common.dart';
 import './api.dart' as api;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<StatefulWidget> createState() => _GamepadState2();
-}
-
-class _GamepadState2 extends State<HomePage>
-    with AutomaticKeepAliveClientMixin {
-  var _hostController = TextEditingController.fromValue(
-    TextEditingValue(text: "broker.emqx.io:1883"),
-  );
-  var _authController = TextEditingController.fromValue(
-    TextEditingValue(text: "emqx:public"),
-  );
-  var _deviceIDController = TextEditingController.fromValue(
-    TextEditingValue(text: "mqttx_123456"),
-  );
-
-  late MqttServerClient _mqttClient;
-
-  @override
-  void initState() {
-    super.initState();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-  }
-
-  @override
-  void dispose() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[900],
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            margin: EdgeInsets.only(
-              top: MediaQuery.of(context).size.height * 0.11,
-            ),
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(40),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((255.0 * 0.5).round()),
-                  spreadRadius: 5,
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildDirectionButton("↑", "UP"),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildDirectionButton('←', "LEFT"),
-                            SizedBox(width: 48),
-                            _buildDirectionButton('→', "RIGHT"),
-                          ],
-                        ),
-                        _buildDirectionButton("↓", "DOWN"),
-                      ],
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.4,
-                      child: TextFormField(
-                        controller: _deviceIDController,
-                        decoration: InputDecoration(
-                          hintText: "请输入连接设备ID",
-                          hintStyle: TextStyle(color: Colors.white),
-                        ),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildRoundButton(Colors.green, "B"),
-                        SizedBox(width: 30, height: 24),
-                        _buildRoundButton(Colors.red, "A"),
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("MQTT服务器", style: TextStyle(color: Colors.white)),
-                    SizedBox(width: 5),
-                    SizedBox(
-                      width: 200,
-                      child: TextField(
-                        controller: _hostController,
-                        decoration: InputDecoration(
-                          hintText: "MQTT地址 host:port",
-                          hintStyle: TextStyle(color: Colors.white),
-                        ),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    SizedBox(
-                      width: 200,
-                      child: TextField(
-                        controller: _authController,
-                        decoration: InputDecoration(
-                          hintText: "账号:密码",
-                          hintStyle: TextStyle(color: Colors.white),
-                        ),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 100,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          var host = _hostController.text;
-                          var auth = _authController.text;
-
-                          List<String> splitHost = host.split(":");
-                          List<String> splitAuth = auth.split(":");
-
-                          var clientId =
-                              DateTime.now().millisecondsSinceEpoch.toString();
-                          print("clientId: $clientId");
-                          _mqttClient = MqttServerClient.withPort(
-                            splitHost[0],
-                            clientId,
-                            int.parse(splitHost[1]),
-                          );
-                          _mqttClient.keepAlivePeriod = 60;
-                          _mqttClient.logging(on: true);
-                          final connMessage = MqttConnectMessage()
-                              .authenticateAs(splitAuth[0], splitAuth[1]);
-                          _mqttClient.connectionMessage = connMessage;
-                          _mqttClient.onConnected = () {
-                            print("clientId:$clientId connected");
-                            setState(() {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  backgroundColor: Colors.green,
-                                  content: Text("连接成功"),
-                                ),
-                              );
-                            });
-                          };
-                          _mqttClient.connect();
-                        },
-                        child: Text("连接"),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoundButton(Color color, String action) {
-    return Container(
-      margin: const EdgeInsets.all(4),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          minimumSize: const Size(56, 56),
-          shape: const CircleBorder(),
-          elevation: 4,
-          padding: EdgeInsets.zero,
-        ),
-        onPressed: () {
-          _handleAction(action);
-        },
-        child: Container(
-          width: 56,
-          height: 56,
-          alignment: Alignment.center,
-          child: Text(
-            color == Colors.red ? 'A' : 'B',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDirectionButton(String label, String action) {
-    return Container(
-      margin: const EdgeInsets.all(4),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[300],
-          minimumSize: const Size(48, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          elevation: 4,
-          padding: EdgeInsets.zero,
-        ),
-        onPressed: () {
-          _handleAction(action);
-        },
-        child: Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[800],
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _handleAction(String action) {
-    print("press $action");
-    var builder = MqttClientPayloadBuilder();
-    builder.addString(jsonEncode({"action": action}));
-    var deviceID = _deviceIDController.text;
-    _mqttClient.publishMessage(
-      "mycar/action/$deviceID",
-      MqttQos.exactlyOnce,
-      builder.payload!,
-    );
-  }
-
-  @override
-  bool get wantKeepAlive => true;
+  State<StatefulWidget> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage>
@@ -431,9 +185,104 @@ class MinePage extends StatefulWidget {
 }
 
 class _MinePageState extends State<MinePage> {
+  var _actions = ["云同步本地", "设置", "意见反馈", "支持我们"];
+  var _userController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text("Mine")));
+    return Scaffold(
+      appBar: AppBar(toolbarHeight: 0),
+      body: Center(
+        child: Column(
+          children: [
+            if (Common.getData(Common.login_key) == "")
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginPage(),
+                            ),
+                          );
+                        },
+                        child: Text("去登录"),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (Common.getData(Common.login_key) != "")
+              Column(
+                children: [
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            minRadius: 60.0,
+                            child: Text(
+                              "T",
+                              style: TextStyle(
+                                fontSize: 72,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text("test", style: TextStyle(fontSize: 24)),
+                                Text(
+                                  "test@qq.com",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          Container(
+                            margin: EdgeInsets.all(20),
+                            width: MediaQuery.of(context).size.width - 10,
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            child: ListView.builder(
+                              padding: EdgeInsets.all(8),
+                              itemCount: _actions.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    print("action : ${_actions[index]}");
+                                  },
+                                  child: SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.8,
+                                    height: 40,
+                                    child: Text(
+                                      _actions[index],
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -545,6 +394,243 @@ class _DetailPageState extends State<DetailPage> {
                 },
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("登录")),
+      body: Container(
+        child: Card(
+          margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 5.0),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: '用户名',
+                    hintText: "请输入用户名或邮箱",
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: '密码',
+                    hintText: "请输入密码",
+                  ),
+                  obscureText: true,
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle login logic here
+                  },
+                  child: Text('登录'),
+                ),
+                SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegPage()),
+                    );
+                  },
+                  child: Text(
+                    "还没有账号，去注册",
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RegPage extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => _RegPageState();
+}
+
+class _RegPageState extends State<RegPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("注册")),
+      body: Container(
+        child: Card(
+          margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 5.0),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: '用户名',
+                    hintText: "请输入邮箱",
+                  ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          labelText: '验证码',
+                          hintText: "请输入验证码",
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(onPressed: () {}, child: Text("获取验证码")),
+                  ],
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: '密码',
+                    hintText: "请输入密码",
+                  ),
+                  obscureText: true,
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: '昵称',
+                    hintText: "请输入昵称",
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle login logic here
+                  },
+                  child: Text('登录'),
+                ),
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                  },
+                  child: Text(
+                    "有账号，去登录",
+                    style: TextStyle(color: Colors.blueAccent),
+                  ),
+                ),
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ForgetPasswordPage(),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    "忘记密码",
+                    style: TextStyle(color: Colors.blueAccent),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ForgetPasswordPage extends StatefulWidget {
+  const ForgetPasswordPage({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _ForgetPasswordPageState();
+}
+
+class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("忘记密码")),
+      body: Container(
+        child: Card(
+          margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 5.0),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: '用户名',
+                    hintText: "请输入邮箱",
+                  ),
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          labelText: '验证码',
+                          hintText: "请输入验证码",
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(onPressed: () {}, child: Text("获取验证码")),
+                  ],
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: '密码',
+                    hintText: "请输入密码",
+                  ),
+                  obscureText: true,
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle login logic here
+                  },
+                  child: Text('重置密码'),
+                ),
+                SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
+                  },
+                  child: Text(
+                    "去登录",
+                    style: TextStyle(color: Colors.blueAccent),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
