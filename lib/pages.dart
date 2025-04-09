@@ -317,17 +317,15 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     super.initState();
-    api.detail(arg['detailUrl']).then((response) {
-      var status = response['status'];
-      if (status != 200) {
-        var message = response['headers']['X-message'];
+    api.detail(arg['detailUrl']).then((Tuple tuple) {
+      if (tuple.a != 0) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: message ?? "未找到结果"));
+        ).showSnackBar(SnackBar(content: tuple.b ?? "未找到结果"));
         return;
       }
       setState(() {
-        data = response['data'];
+        data = tuple.c;
       });
     });
   }
