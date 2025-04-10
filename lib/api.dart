@@ -146,25 +146,194 @@ Future<void> downloadApk(String downloadUrl, ProgressListener listener) async {
     var path = Uri.parse(downloadUrl).path;
     var filename = path.substring(path.lastIndexOf("/") + 1);
 
-    r.stream.listen((List<int> chunk) {
-      chunks.add(chunk);
-      downloaded += chunk.length;
-      listener.onProgress(downloaded, total!);
-    }, onDone: () async {
-      print('downloadPercentage: ${downloaded / total! * 100}');
+    r.stream.listen(
+      (List<int> chunk) {
+        chunks.add(chunk);
+        downloaded += chunk.length;
+        listener.onProgress(downloaded, total!);
+      },
+      onDone: () async {
+        print('downloadPercentage: ${downloaded / total! * 100}');
 
-      var directory = await getDownloadsDirectory();
-      var dir = directory?.path;
+        var directory = await getDownloadsDirectory();
+        var dir = directory?.path;
 
-      File file = new File('$dir/$filename');
-      final Uint8List bytes = Uint8List(total);
-      int offset = 0;
-      for (List<int> chunk in chunks) {
-        bytes.setRange(offset, offset + chunk.length, chunk);
-        offset += chunk.length;
-      }
-      await file.writeAsBytes(bytes);
-    });
+        File file = new File('$dir/$filename');
+        final Uint8List bytes = Uint8List(total);
+        int offset = 0;
+        for (List<int> chunk in chunks) {
+          bytes.setRange(offset, offset + chunk.length, chunk);
+          offset += chunk.length;
+        }
+        await file.writeAsBytes(bytes);
+      },
+    );
   });
-
 }
+
+Future<Tuple<int, String, dynamic>> profile() async {
+  var body = jsonEncode({
+    "method": "GET",
+    "url": "/profileEdit",
+    "headers": {"cookie": SessionManager.getSession()},
+    "params": {},
+  });
+  print("request: $body");
+
+  var response = await http.post(
+    Uri.parse(base),
+    headers: {"Content-Type": "application/json"},
+    body: body,
+  );
+
+  var statusCode = response.statusCode;
+  if (statusCode > 299) {
+    return Tuple(1, response.headers['X-message'].toString(), "");
+  }
+  var result = const Utf8Decoder().convert(response.bodyBytes);
+  print("response: $statusCode : $result");
+
+  var resp = jsonDecode(result);
+
+  var status = int.parse(resp["status"].toString());
+  if (status > 299) {
+    return Tuple(1, response.headers["X-message"].toString(), "");
+  }
+  var email = resp["data"]['email'];
+  if (email == "") {
+    return Tuple(1, "未登录", "");
+  }
+  return Tuple(0, "", resp["data"]);
+}
+
+Future<Tuple<int, String, dynamic>> sendCode(
+  String emailStr,
+  String password,
+  String nickname,
+) async {
+  var body = jsonEncode({
+    "method": "POST",
+    "url": "/papi/user/verification/send-code",
+    "headers": {"content-type": "multipart/form-data"},
+    "params": {},
+    "data": {
+      "email": emailStr,
+      "password": password,
+      "name":
+          nickname == ""
+              ? Uri.encodeComponent(emailStr.split("@")[0])
+              : Uri.encodeComponent(nickname),
+      "rx": 215,
+      "action": "registration",
+      "redirectUrl": "",
+    },
+  });
+  print("request: $body");
+
+  var response = await http.post(
+    Uri.parse(base),
+    headers: {"Content-Type": "application/json"},
+    body: body,
+  );
+
+  var statusCode = response.statusCode;
+  if (statusCode > 299) {
+    return Tuple(1, response.headers['X-message'].toString(), "");
+  }
+  var result = const Utf8Decoder().convert(response.bodyBytes);
+  print("response: $statusCode : $result");
+
+  var resp = jsonDecode(result);
+
+  var status = int.parse(resp["status"].toString());
+  if (status > 299) {
+    return Tuple(1, response.headers["X-message"].toString(), "");
+  }
+  var data = jsonDecode(resp["data"].toString());
+  // data["success"] == 1 1:success 0:error
+  return Tuple(0, "", data);
+}
+
+Future<Tuple<int, String, dynamic>> sendCodePasswordRecovery(
+  String emailStr,
+) async {
+  var body = jsonEncode({
+    "method": "POST",
+    "url": "/papi/user/verification/send-code",
+    "headers": {"content-type": "multipart/form-data"},
+    "params": {},
+    "data": {"email": emailStr, "action": "passwordrecovery"},
+  });
+  print("request: $body");
+
+  var response = await http.post(
+    Uri.parse(base),
+    headers: {"Content-Type": "application/json"},
+    body: body,
+  );
+
+  var statusCode = response.statusCode;
+  if (statusCode > 299) {
+    return Tuple(1, response.headers['X-message'].toString(), "");
+  }
+  var result = const Utf8Decoder().convert(response.bodyBytes);
+  print("response: $statusCode : $result");
+
+  var resp = jsonDecode(result);
+
+  var status = int.parse(resp["status"].toString());
+  if (status > 299) {
+    return Tuple(1, response.headers["X-message"].toString(), "");
+  }
+  var data = jsonDecode(resp["data"].toString());
+  // data["success"] == 1 1:success 0:error
+  return Tuple(0, "", data);
+}
+
+Future<Tuple<int, String, dynamic>> registration(
+  String emailStr,
+  String password,
+  String verifyCode,
+  String nickname,
+) async {
+  var body = jsonEncode({
+    "method": "POST",
+    "url": "/rpc.php",
+    "headers": {
+      "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    },
+    "params": {},
+    "data":
+        "isModal=true&email=${Uri.encodeComponent(emailStr)}&password=$password&name=${nickname == "" ? Uri.encodeComponent(emailStr.split("@")[0]) : Uri.encodeComponent(nickname)}&rx=215&action=registration&redirectUrl=&verifyCode=$verifyCode&gg_json_mode=1",
+  });
+  print("request: $body");
+
+  var response = await http.post(
+    Uri.parse(base),
+    headers: {"Content-Type": "application/json"},
+    body: body,
+  );
+
+  var statusCode = response.statusCode;
+  if (statusCode > 299) {
+    return Tuple(1, response.headers['X-message'].toString(), "");
+  }
+  var result = const Utf8Decoder().convert(response.bodyBytes);
+  print("response: $statusCode : $result");
+
+  var resp = jsonDecode(result);
+
+  var status = int.parse(resp["status"].toString());
+  if (status > 299) {
+    return Tuple(1, response.headers["X-message"].toString(), "");
+  }
+  var data = jsonDecode(resp["data"].toString());
+  var forceRedirection = data["response"]["forceRedirection"].toString();
+  if (forceRedirection == "") {
+    return Tuple(1, response.headers['X-message'].toString(), "");
+  }
+  var session = forceRedirection.substring(2).replaceAll("&", ";");
+  return Tuple(0, "", session);
+}
+
+
