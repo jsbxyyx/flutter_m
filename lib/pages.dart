@@ -411,7 +411,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("登录")),
-      body: Container(
+      body: SingleChildScrollView(
         child: Card(
           margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 5.0),
           child: Padding(
@@ -493,7 +493,7 @@ class _RegPageState extends State<RegPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("注册")),
-      body: Container(
+      body: SingleChildScrollView(
         child: Card(
           margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 5.0),
           child: Padding(
