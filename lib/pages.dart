@@ -405,6 +405,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -414,44 +416,60 @@ class _LoginPageState extends State<LoginPage> {
           margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 5.0),
           child: Padding(
             padding: EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: '用户名',
-                    hintText: "请输入用户名或邮箱",
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: '用户名',
+                      hintText: "请输入用户名或邮箱",
+                    ),
+                    validator: (v) {
+                      if (v == null || v.toString().trim() == "") {
+                        return "请输入用户名或邮箱";
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                SizedBox(height: 10),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: '密码',
-                    hintText: "请输入密码",
+                  SizedBox(height: 10),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: '密码',
+                      hintText: "请输入密码",
+                    ),
+                    obscureText: true,
+                    validator: (v) {
+                      if (v == null || v.toString().trim() == "") {
+                        return "请输入密码";
+                      }
+                      return null;
+                    },
                   ),
-                  obscureText: true,
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle login logic here
-                  },
-                  child: Text('登录'),
-                ),
-                SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RegPage()),
-                    );
-                  },
-                  child: Text(
-                    "还没有账号，去注册",
-                    style: TextStyle(color: Colors.blue),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Handle login logic here
+                      if (!_formKey.currentState!.validate()) {}
+                    },
+                    child: Text('登录'),
                   ),
-                ),
-              ],
+                  SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegPage()),
+                      );
+                    },
+                    child: Text(
+                      "还没有账号，去注册",
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -461,11 +479,16 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 class RegPage extends StatefulWidget {
+  const RegPage({super.key});
+
   @override
   State<StatefulWidget> createState() => _RegPageState();
 }
 
 class _RegPageState extends State<RegPage> {
+
+  final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -475,80 +498,109 @@ class _RegPageState extends State<RegPage> {
           margin: EdgeInsets.only(left: 15.0, right: 15.0, top: 5.0),
           child: Padding(
             padding: EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: '用户名',
-                    hintText: "请输入邮箱",
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: '用户名',
+                      hintText: "请输入邮箱",
+                    ),
+                    validator: (v) {
+                      if (v == null || v.toString().trim() == "") {
+                        return "请输入邮箱";
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          labelText: '验证码',
-                          hintText: "请输入验证码",
+                  SizedBox(height: 10),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: '昵称',
+                      hintText: "请输入昵称",
+                    ),
+                    validator: (v) {
+                      if (v == null || v.toString().trim() == "") {
+                        return "请输入昵称";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: '密码',
+                      hintText: "请输入密码",
+                    ),
+                    obscureText: true,
+                    validator: (v) {
+                      if (v == null || v.toString().trim() == "") {
+                        return "请输入密码";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            labelText: '验证码',
+                            hintText: "请输入验证码",
+                          ),
+                          validator: (v) {
+                            if (v == null || v.toString().trim() == "") {
+                              return "请输入验证码";
+                            }
+                            return null;
+                          },
                         ),
                       ),
+                      ElevatedButton(onPressed: () {}, child: Text("获取验证码")),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (!_formKey.currentState!.validate()) {
+
+                      }
+                    },
+                    child: Text('注册'),
+                  ),
+                  SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                      );
+                    },
+                    child: Text(
+                      "有账号，去登录",
+                      style: TextStyle(color: Colors.blueAccent),
                     ),
-                    ElevatedButton(onPressed: () {}, child: Text("获取验证码")),
-                  ],
-                ),
-                SizedBox(height: 10),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: '密码',
-                    hintText: "请输入密码",
                   ),
-                  obscureText: true,
-                ),
-                SizedBox(height: 10),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: '昵称',
-                    hintText: "请输入昵称",
+                  SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ForgetPasswordPage(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "忘记密码",
+                      style: TextStyle(color: Colors.blueAccent),
+                    ),
                   ),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle login logic here
-                  },
-                  child: Text('登录'),
-                ),
-                SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginPage()),
-                    );
-                  },
-                  child: Text(
-                    "有账号，去登录",
-                    style: TextStyle(color: Colors.blueAccent),
-                  ),
-                ),
-                SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ForgetPasswordPage(),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "忘记密码",
-                    style: TextStyle(color: Colors.blueAccent),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
