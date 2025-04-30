@@ -5,7 +5,7 @@ import 'dart:io';
 import './sp.dart';
 
 class Common {
-  static final Map<String, String> _map = {};
+  static final Map<String, dynamic> _map = {};
 
   static const String login_key = "userdata";
   static const String serv_userid = "remix_userid";
@@ -14,7 +14,7 @@ class Common {
   static String _documentDirectory = "";
 
   static String getData(String key) {
-    var value = _map[key];
+    var value = _map[key]?.toString();
     return value ?? "";
   }
 
@@ -32,7 +32,8 @@ class Common {
     }
     var text = SP.read(filename);
     if (text != "") {
-      _map.addAll(jsonDecode(text));
+      var json = jsonDecode(text);
+      _map.addAll(json);
     }
   }
 

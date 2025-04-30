@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_m/common.dart';
+import 'package:flutter_m/session.dart';
 import '../api.dart' as api;
 import './login.dart';
 
@@ -12,7 +13,25 @@ class MinePage extends StatefulWidget {
 
 class _MinePageState extends State<MinePage> {
   var _actions = ["云同步本地", "设置", "意见反馈", "支持我们"];
-  var _userController = TextEditingController();
+
+  var _nickname = "";
+  var _email = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (Common.getData(Common.login_key) != "") {
+      api.profile().then((t) {
+        if (t.a == 0) {
+          setState(() {
+            var data = t.c;
+            _nickname = data["nickname"] ?? "";
+            _email = data["email"] ?? "";
+          });
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +71,7 @@ class _MinePageState extends State<MinePage> {
                           CircleAvatar(
                             minRadius: 60.0,
                             child: Text(
-                              "T",
+                              _nickname.length > 1 ? _nickname[0] : "",
                               style: TextStyle(
                                 fontSize: 72,
                                 fontWeight: FontWeight.w500,
@@ -62,11 +81,8 @@ class _MinePageState extends State<MinePage> {
                           Expanded(
                             child: Column(
                               children: [
-                                Text("test", style: TextStyle(fontSize: 24)),
-                                Text(
-                                  "test@qq.com",
-                                  style: TextStyle(fontSize: 16),
-                                ),
+                                Text(_nickname, style: TextStyle(fontSize: 24)),
+                                Text(_email, style: TextStyle(fontSize: 16)),
                               ],
                             ),
                           ),
@@ -88,7 +104,7 @@ class _MinePageState extends State<MinePage> {
                                   },
                                   child: SizedBox(
                                     width:
-                                    MediaQuery.of(context).size.width * 0.8,
+                                        MediaQuery.of(context).size.width * 0.8,
                                     height: 40,
                                     child: Text(
                                       _actions[index],
@@ -98,6 +114,13 @@ class _MinePageState extends State<MinePage> {
                                 );
                               },
                             ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              SessionManager.setSession("");
+                              Common.setData(Common.login_key, "");
+                            },
+                            child: Text("退出登录"),
                           ),
                         ],
                       ),
