@@ -8,6 +8,20 @@ class Common {
   static final Map<String, dynamic> _map = {};
 
   static const String login_key = "userdata";
+  static const String profile_nickname_key = "profile_nickname";
+  static const String profile_email_key = "profile_email";
+
+  static const String search_ext_key = "search_ext";
+  static const String search_language_key = "search_language";
+  static const String sync_key = "sync";
+  static const String reader_image_show_key = "reader_image_show";
+  static const String online_read_key = "online_read";
+  static const String checked = "1";
+  static const String unchecked = "0";
+
+  static const String log_suffix = ".exception";
+  static const String book_metadata_suffix = ".meta";
+
   static const String serv_userid = "remix_userid";
   static const String serv_userkey = "remix_userkey";
 

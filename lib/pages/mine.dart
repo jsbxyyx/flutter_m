@@ -12,25 +12,56 @@ class MinePage extends StatefulWidget {
 }
 
 class _MinePageState extends State<MinePage> {
-  var _actions = ["云同步本地", "设置", "意见反馈", "支持我们"];
+
 
   var _nickname = "";
   var _email = "";
+
+  var _isLogin = false;
+
+  var _actions = {
+    "云同步本地": () => {},
+    "设置": () => {},
+    "意见反馈": () => {},
+    "支持我们": () => {}
+  };
+
+
+  void _cloudSync() {
+
+  }
+
+  void _settings() {
+
+  }
 
   @override
   void initState() {
     super.initState();
     if (Common.getData(Common.login_key) != "") {
-      api.profile().then((t) {
-        if (t.a == 0) {
-          setState(() {
+      if (Common.getData(Common.profile_email_key) != "" &&
+          Common.getData(Common.profile_nickname_key) != "") {
+        setState(() {
+          _nickname = Common.getData(Common.profile_nickname_key);
+          _email = Common.getData(Common.profile_email_key);
+        });
+      } else {
+        api.profile().then((t) {
+          if (t.a == 0) {
             var data = t.c;
-            _nickname = data["nickname"] ?? "";
-            _email = data["email"] ?? "";
-          });
-        }
-      });
+            setState(() {
+              _nickname = data["nickname"] ?? "";
+              _email = data["email"] ?? "";
+            });
+            Common.setData(Common.profile_nickname_key, data["nickname"] ?? "");
+            Common.setData(Common.profile_email_key, data["email"] ?? "");
+          }
+        });
+      }
     }
+    setState(() {
+      _isLogin = (Common.getData(Common.login_key) != "");
+    });
   }
 
   @override
@@ -40,7 +71,7 @@ class _MinePageState extends State<MinePage> {
       body: Center(
         child: Column(
           children: [
-            if (Common.getData(Common.login_key) == "")
+            if (!_isLogin)
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -61,7 +92,7 @@ class _MinePageState extends State<MinePage> {
                   ],
                 ),
               )
-            else if (Common.getData(Common.login_key) != "")
+            else if (_isLogin)
               Column(
                 children: [
                   Column(
@@ -96,18 +127,18 @@ class _MinePageState extends State<MinePage> {
                             height: MediaQuery.of(context).size.height * 0.5,
                             child: ListView.builder(
                               padding: EdgeInsets.all(8),
-                              itemCount: _actions.length,
+                              itemCount: _actions.keys.length,
                               itemBuilder: (BuildContext context, int index) {
                                 return GestureDetector(
                                   onTap: () {
-                                    print("action : ${_actions[index]}");
+                                    print("action : ${_actions.keys.map((e) => e).toList()[index]}");
                                   },
                                   child: SizedBox(
                                     width:
                                         MediaQuery.of(context).size.width * 0.8,
                                     height: 40,
                                     child: Text(
-                                      _actions[index],
+                                      _actions.keys.map((e) => e).toList()[index],
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -119,6 +150,9 @@ class _MinePageState extends State<MinePage> {
                             onTap: () {
                               SessionManager.setSession("");
                               Common.setData(Common.login_key, "");
+                              setState(() {
+                                _isLogin = false;
+                              });
                             },
                             child: Text("退出登录"),
                           ),
